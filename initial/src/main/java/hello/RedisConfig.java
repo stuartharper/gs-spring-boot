@@ -6,6 +6,7 @@ import io.lettuce.core.cluster.ClusterTopologyRefreshOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -16,6 +17,7 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
@@ -23,6 +25,11 @@ import java.util.List;
 @Configuration("CacheConfiguration")
 public class RedisConfig {
     Logger LOGGER = LoggerFactory.getLogger(RedisConfig.class);
+
+    @Value("${redis.hosts}")
+    private String redisHosts;
+    @Value("${redis.dynamicRefreshSources}")
+    private Boolean redisDynamicRefreshSources;
 
     RedisTemplate<String, Object> getRedisTemplate() {
         RedisTemplate<String, Object> template = null;
@@ -45,16 +52,15 @@ public class RedisConfig {
 
     @Bean
     public RedisConnectionFactory getConnectionFactory() {
-        List<String> clusterNodes = Arrays.asList("server1:7001".split(","));
+        List<String> clusterNodes = Arrays.asList(redisHosts.split(","));
         int refreshInterval = 60;
-        boolean dynamicRefreshSources = false;
         /*
         In case of failover within the cluster, the client may need to refresh it's knowledge of the
         cluster nodes. The periodic refresh interval defaults to 1 minute
          */
         ClusterTopologyRefreshOptions topologyRefreshOptions = ClusterTopologyRefreshOptions.builder()
-                .enablePeriodicRefresh()
-                .dynamicRefreshSources(dynamicRefreshSources)
+                .enablePeriodicRefresh(Duration.ofSeconds(refreshInterval))
+                .dynamicRefreshSources(redisDynamicRefreshSources)
                 .build();
 
         ClientOptions clientOptions = ClusterClientOptions.builder()
