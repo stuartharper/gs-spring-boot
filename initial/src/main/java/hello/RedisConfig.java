@@ -53,7 +53,7 @@ public class RedisConfig {
     @Bean
     public RedisConnectionFactory getConnectionFactory() {
         List<String> clusterNodes = Arrays.asList(redisHosts.split(","));
-        int refreshInterval = 60;
+        int refreshInterval = 10;
         /*
         In case of failover within the cluster, the client may need to refresh it's knowledge of the
         cluster nodes. The periodic refresh interval defaults to 1 minute

@@ -13,10 +13,16 @@ public class HelloController {
 
     @RequestMapping("/")
     public String index() {
+        String response = null;
+        try {
+            redisCache.saveObject("Hello", "World".getBytes(), 60);
+            String returned = new String(redisCache.getObject("Hello"));
+            response = "Redis up. Returned: " + returned;
+        } catch(Exception e){
+            response = "redis is down :( " + e.getMessage();
+        }
 
-        redisCache.saveObject("Hello","World".getBytes(),60);
-
-        return "Greetings from Spring Boot!";
+        return response;
     }
     
 }
